@@ -2,7 +2,7 @@
 from collections import OrderedDict
 
 import voluptuous as vol
-from sampleclient.client import Client
+import gkeepapi
 from homeassistant import config_entries
 
 from .const import DOMAIN
@@ -48,16 +48,20 @@ class BlueprintFlowHandler(config_entries.ConfigFlow):
         # Defaults
         username = ""
         password = ""
+        default_list = ""
 
         if user_input is not None:
             if "username" in user_input:
                 username = user_input["username"]
             if "password" in user_input:
                 password = user_input["password"]
+            if "default_list" in user_input:
+                password = user_input["default_list"]
 
         data_schema = OrderedDict()
         data_schema[vol.Required("username", default=username)] = str
         data_schema[vol.Required("password", default=password)] = str
+        data_schema[vol.Required("default_list", default=default_list)] = str
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema(data_schema), errors=self._errors
         )
@@ -75,9 +79,8 @@ class BlueprintFlowHandler(config_entries.ConfigFlow):
     async def _test_credentials(self, username, password):
         """Return true if credentials is valid."""
         try:
-            client = Client(username, password)
-            client.get_data()
-            return True
+            gkeep = gkeepapi.Keep()
+            return gkeep.login(username, password)
         except Exception:  # pylint: disable=broad-except
             pass
         return False
