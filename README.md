@@ -25,3 +25,6 @@ custom_components/gkeep/const.py
 custom_components/gkeep/manifest.json
 custom_components/gkeep/sensor.py
 ```
+
+## Notes
+You need an app password if you have 2AF enable

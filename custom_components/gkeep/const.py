@@ -2,7 +2,7 @@
 # Base component constants
 DOMAIN = "gkeep"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "0.0.1"
+VERSION = "0.0.2"
 PLATFORMS = ["sensor"]
 REQUIRED_FILES = [
     ".translations/en.json",
@@ -11,6 +11,7 @@ REQUIRED_FILES = [
     "config_flow.py",
     "manifest.json",
     "sensor.py",
+    "services.yaml",
 ]
 ISSUE_URL = "https://github.com/BlueBlueBlob/gkeep/issues"
 ATTRIBUTION = "Data from this is provided by gkeep."
