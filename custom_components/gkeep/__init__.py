@@ -12,6 +12,7 @@ from homeassistant import config_entries
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
+from homeassistant.core import callback
 
 import gkeepapi
 
@@ -21,6 +22,10 @@ from .const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_DEFAULT_LIST,
+    ATTR_ITEM_TITLE,
+    ATTR_ITEM_CHECKED,
+    SERVICE_NEW_ITEM,
+    SERVICE_ITEM_CHECKED,
     DEFAULT_NAME,
     DOMAIN_DATA,
     DOMAIN,
@@ -34,6 +39,18 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 _LOGGER = logging.getLogger(__name__)
 
+NEW_ITEM_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ITEM_TITLE): cv.string,
+    }
+)
+
+CHECKED_ITEM_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ITEM_TITLE): cv.string,
+        vol.Required(ATTR_ITEM_CHECKED): cv.boolean,
+    }
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -109,6 +126,44 @@ async def async_setup_entry(hass, config_entry):
         hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     )
 
+    @callback
+    def item_checked(call):
+        item_title = call.data.get(ATTR_ITEM_TITLE)
+        item_checked = call.data.get(ATTR_ITEM_CHECKED)
+        gkeep = hass.data[DOMAIN_DATA]["gkeep"]
+        try:
+            for item in gkeep.list.items:
+                if item.text == item_title:
+                    item.checked = item_checked
+                    break
+            gkeep.gkeep.sync()
+        except Exception as e:
+            _LOGGER.exception(e)
+        
+    #Register "item_checked" service
+    hass.services.async_register(
+        DOMAIN, SERVICE_ITEM_CHECKED, item_checked, schema=CHECKED_ITEM_SCHEMA
+    )
+
+    @callback
+    def new_item(call):
+        item_title = call.data.get(ATTR_ITEM_TITLE)
+        gkeep = hass.data[DOMAIN_DATA]["gkeep"]
+        try:
+            for item in gkeep.list.items:
+                if item.text == item_title:
+                    item.checked = False
+                    break
+            else:
+                gkeep.list.add(item_title, False)
+            gkeep.gkeep.sync()
+        except Exception as e:
+            _LOGGER.exception(e)
+        
+    #Register "new_item" service
+    hass.services.async_register(
+        DOMAIN, SERVICE_NEW_ITEM, new_item, schema=NEW_ITEM_SCHEMA
+    )
 
     return True
 
@@ -167,6 +222,8 @@ async def async_remove_entry(hass, config_entry):
     try:
         await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
         _LOGGER.info("Successfully removed sensor from the blueprint integration")
-    except ValueError:
+    except ValueError as e:
+        _LOGGER.exception(e)
         pass
+
 
