@@ -2,7 +2,7 @@
 # Base component constants
 DOMAIN = "gkeep"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "0.0.2"
+VERSION = "0.0.3"
 PLATFORMS = ["sensor"]
 REQUIRED_FILES = [
     ".translations/en.json",
