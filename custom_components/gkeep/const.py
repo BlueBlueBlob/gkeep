@@ -6,7 +6,6 @@ VERSION = "0.0.2"
 PLATFORMS = ["sensor"]
 REQUIRED_FILES = [
     ".translations/en.json",
-    "binary_sensor.py",
     "const.py",
     "config_flow.py",
     "manifest.json",
@@ -29,6 +28,7 @@ CONF_DEFAULT_LIST = "default_list"
 
 # Defaults
 DEFAULT_NAME = DOMAIN
+SENSOR_NAME = "sensor"
 
 #Services attributes
 ATTR_ITEM_TITLE = "item_title"
@@ -37,3 +37,4 @@ ATTR_ITEM_CHECKED = "item_checked"
 #Services names
 SERVICE_NEW_ITEM = "new_item"
 SERVICE_ITEM_CHECKED = "item_checked"
+

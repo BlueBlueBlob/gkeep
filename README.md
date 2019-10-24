@@ -28,3 +28,5 @@ custom_components/gkeep/sensor.py
 
 ## Notes
 You need an app password if you have 2AF enable
+
+Sensor is synced with gkeep

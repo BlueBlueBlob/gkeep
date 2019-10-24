@@ -7,10 +7,11 @@ https://github.com/custom-components/blueprint
 import os
 from datetime import timedelta
 import logging
+import asyncio
 import voluptuous as vol
 from homeassistant import config_entries
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, event
 from homeassistant.util import Throttle
 from homeassistant.core import callback
 
@@ -27,6 +28,7 @@ from .const import (
     SERVICE_NEW_ITEM,
     SERVICE_ITEM_CHECKED,
     DEFAULT_NAME,
+    SENSOR_NAME,
     DOMAIN_DATA,
     DOMAIN,
     ISSUE_URL,
@@ -115,11 +117,7 @@ async def async_setup_entry(hass, config_entry):
             break
     else:
         return False
-        
-    # Add binary_sensor
-    #hass.async_add_job(
-        #hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
-    #)
+
 
     # Add sensor
     hass.async_add_job(
@@ -165,6 +163,16 @@ async def async_setup_entry(hass, config_entry):
         DOMAIN, SERVICE_NEW_ITEM, new_item, schema=NEW_ITEM_SCHEMA
     )
 
+    def handle_sensor_change(entity_id, old_state, new_state):
+        if old_state is None:
+            return
+        old_list = old_state.attributes['items']
+        new_list = new_state.attributes['items']
+        gkeep = hass.data[DOMAIN_DATA]["gkeep"]
+        return asyncio.run_coroutine_threadsafe(gkeep.update_from_sensor(hass, old_list, new_list), hass.loop).result()
+
+    event.async_track_state_change(hass, '{}.{}_{}'.format(SENSOR_NAME, DOMAIN, hass.data[DOMAIN_DATA]["gkeep"].list.title.lower()), handle_sensor_change)
+    
     return True
 
 
@@ -176,6 +184,25 @@ class GkeepData:
         self.hass = hass
         self.gkeep = gkeep
         self.list = list
+
+    async def update_from_sensor(self, hass, old_list, new_list):
+        diff_list = []
+        for new_item in new_list:
+            for old_item in old_list:
+                if new_item['name'] == old_item['name'] and new_item['checked'] != old_item['checked']:
+                    diff_list.append(new_item)
+                    break
+        for item in diff_list:
+            for gkeep_item in self.list.items:
+                if item['name'] == gkeep_item.text:
+                    gkeep_item.checked = item['checked']
+                    break
+                    
+        try:
+            await self.hass.async_add_executor_job(self.gkeep.sync)
+        except Exception as error:  # pylint: disable=broad-except
+            _LOGGER.error("Could not sync - %s", error)
+                    
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def update_data(self):
@@ -209,21 +236,10 @@ async def check_files(hass):
 
 async def async_remove_entry(hass, config_entry):
     """Handle removal of an entry."""
-    #try:
-        #await hass.config_entries.async_forward_entry_unload(
-            #config_entry, "binary_sensor"
-        #)
-        #_LOGGER.info(
-            #"Successfully removed binary_sensor from the blueprint integration"
-        #)
-    #except ValueError:
-        #pass
-
     try:
         await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-        _LOGGER.info("Successfully removed sensor from the blueprint integration")
+        _LOGGER.info("Successfully removed sensor from the gkeep integration")
     except ValueError as e:
         _LOGGER.exception(e)
         pass
-
-
+        
