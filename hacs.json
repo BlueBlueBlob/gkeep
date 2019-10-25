@@ -1,0 +1,6 @@
+{
+  "name": "GKeep live sensor",
+  "render_readme": true,
+  "country": "EU",
+  "iot_class": "Cloud Push"
+}
