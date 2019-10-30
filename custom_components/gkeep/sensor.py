@@ -1,6 +1,8 @@
 """Sensor platform for blueprint."""
 from homeassistant.helpers.entity import Entity
 from homeassistant import config_entries
+from uuid import getnode as get_mac
+
 from .const import ATTRIBUTION, DEFAULT_NAME, DOMAIN_DATA, ICON, DOMAIN, CONF_DEFAULT_LIST
 import logging
 
@@ -28,6 +30,7 @@ class GkeepSensor(Entity):
         self.attr = {}
         self._state = None
         self._name = '{}_{}'.format(DEFAULT_NAME, self.list)
+        self._unique_id = '{}-{}'.format(get_mac() , self._name)
 
     async def async_update(self):
         """Update the sensor."""
@@ -56,9 +59,7 @@ class GkeepSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique ID to use for this sensor."""
-        return (
-            "a2b689c3-6b92-4d8f-96af-2553cb7fde92" + self.list
-        )  
+        return self._unique_id  
 
     @property
     def device_info(self):
