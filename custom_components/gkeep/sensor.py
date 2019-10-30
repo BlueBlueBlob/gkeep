@@ -3,7 +3,15 @@ from homeassistant.helpers.entity import Entity
 from homeassistant import config_entries
 from uuid import getnode as get_mac
 
-from .const import ATTRIBUTION, DEFAULT_NAME, DOMAIN_DATA, ICON, DOMAIN, CONF_DEFAULT_LIST
+from .const import (
+    ATTRIBUTION,
+    DEFAULT_NAME,
+    DOMAIN_DATA,
+    ICON,
+    DOMAIN,
+    CONF_DEFAULT_LIST,
+    SENSOR_NAME,
+)
 import logging
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +38,7 @@ class GkeepSensor(Entity):
         self.attr = {}
         self._state = None
         self._name = '{}_{}'.format(DEFAULT_NAME, self.list)
-        self._unique_id = '{}-{}'.format(get_mac() , self._name)
+        self._unique_id = '{}-{}-{}'.format(get_mac() , SENSOR_NAME, self._name)
 
     async def async_update(self):
         """Update the sensor."""
