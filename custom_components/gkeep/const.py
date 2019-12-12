@@ -10,6 +10,7 @@ REQUIRED_FILES = [
     "config_flow.py",
     "manifest.json",
     "sensor.py",
+    "binary_sensor.py",
     "services.yaml",
 ]
 ISSUE_URL = "https://github.com/BlueBlueBlob/gkeep/issues"
@@ -29,6 +30,7 @@ CONF_DEFAULT_LIST = "default_list"
 # Defaults
 DEFAULT_NAME = DOMAIN
 SENSOR_NAME = "sensor"
+BINARY_SENSOR_NAME = "binary_sensor"
 
 #Services attributes
 ATTR_ITEM_TITLE = "item_title"

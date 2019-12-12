@@ -58,8 +58,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_PASSWORD): cv.string,
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
             }
         )
     },
@@ -122,6 +122,11 @@ async def async_setup_entry(hass, config_entry):
     # Add sensor
     hass.async_add_job(
         hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
+    )
+
+    # Add binary_sensor
+    hass.async_add_job(
+        hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
     )
 
     @callback
