@@ -6,6 +6,7 @@ https://github.com/custom-components/blueprint
 """
 import os
 from datetime import timedelta
+import pickle
 import logging
 import asyncio
 import voluptuous as vol
@@ -104,11 +105,21 @@ async def async_setup_entry(hass, config_entry):
 
     # Configure the client.
     keep = gkeepapi.Keep()
-    try:
-        keep.login(username, password)
-    except Exception as e:
-        _LOGGER.exception(e)
-        return False
+    gkeep_token = None
+    if os.path.exists('/config/gkeep.pickle'):
+        with open('/config/gkeep.pickle', 'rb') as token:
+            gkeep_token = pickle.load(token)
+            keep.resume(username, gkeep_token)
+    else:
+        try:
+            keep.login(username, password)
+            gkeep_token = keep.getMasterToken()
+            with open('/config/gkeep.pickle', 'wb') as token:
+                pickle.dump(gkeep_token, token)
+        except Exception as e:
+            _LOGGER.exception(e)
+            return False
+        
     await hass.async_add_executor_job(keep.sync)
     all_list = await hass.async_add_executor_job(keep.all)
     for list in all_list:
